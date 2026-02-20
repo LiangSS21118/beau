@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JBEAU | 專業調香培訓學院</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* 嚴格配色系統定義 */
+        :root {
+            --color-olive: #708238;   /* 橄欖綠 */
+            --color-blue: #2D5975;    /* 預設藍色 */
+            --color-pink: #EFD5DC;    /* 變色後的粉色 */
+            --color-beige: #f7eada;   /* 米色底 */
+            
+            --dynamic-accent: var(--color-blue);
+            --dynamic-text: var(--color-blue);
+            --dynamic-bg: var(--color-beige);
+            --dynamic-olive: var(--color-olive); 
+        }
+
+        /* 滿版主題：深色分頁模式 (深藍背景/粉色文字/綠變米) */
+        body.page-theme-pink {
+            --dynamic-accent: var(--color-pink);
+            --dynamic-text: var(--color-pink);
+            --dynamic-bg: var(--color-blue);     
+            --dynamic-olive: var(--color-beige); 
+        }
+
+        /* 測驗專用主題：米色背景/藍色文字 (滿版呈現) */
+        body.page-theme-quiz {
+            --dynamic-accent: var(--color-blue);
+            --dynamic-text: var(--color-blue);
+            --dynamic-bg: var(--color-beige);
+            --dynamic-olive: var(--color-olive);
+        }
+
+        body { 
+            font-family: "Arial Black", "Arial", "PMingLiU", "新細明體", serif;
+            scroll-behavior: smooth; 
+            background-color: var(--dynamic-bg); 
+            overflow-x: hidden; 
+            color: var(--dynamic-text);
+            font-weight: normal; 
+            transition: all 0.5s ease;
+            margin: 0;
+            padding: 0;
+        }
+        
+        header { 
+            width: 100%; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 80px;
+            background-color: var(--dynamic-bg); 
+            border-bottom: 1px solid var(--dynamic-olive); 
+            z-index: 1000;
+            transition: all 0.5s ease;
+        }
+        
+        /* 頁面切換控制：確保撐滿全螢幕且垂直置中 */
+        .page-section { 
+            display: none; 
+            min-height: calc(100vh - 80px); 
+            width: 100%;
+            padding-top: 80px; /* 補回 header 高度 */
+            box-sizing: border-box;
+        }
+        .page-section.active { 
+            display: flex; 
+            flex-direction: column;
+        }
+        
+        .nav-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: var(--dynamic-accent);
+            min-width: 250px;
+            z-index: 100;
+            padding: 0;
+            transition: all 0.5s ease;
+        }
+        .group:hover .nav-dropdown { display: block; }
+        .dropdown-item {
+            color: var(--dynamic-bg);
+            padding: 12px 20px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            display: block;
+            text-align: left;
+        }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background-color: var(--dynamic-olive); color: var(--color-beige); }
+
+        /* 滿版輪播圖 */
+        .hero-slider { 
+            position: relative; 
+            width: 100%; 
+            aspect-ratio: 4 / 3; 
+            overflow: hidden; 
+            background-color: var(--color-beige);
+        }
+        .slider-img { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease-in-out; object-fit: cover; width: 100%; height: 100%; }
+        .slider-img.active { opacity: 1; }
+
+        .floating-bar { position: fixed; right: 20px; bottom: 50%; transform: translateY(50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+        .social-btn { 
+            width: 44px; 
+            height: 44px; 
+            background-color: var(--dynamic-accent); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+            transition: all 0.3s; 
+            color: var(--dynamic-bg); 
+        }
+        .social-btn:hover { background-color: var(--dynamic-olive); transform: scale(1.1); }
+        
+        .btn-dynamic { 
+            background-color: var(--dynamic-accent); 
+            color: var(--dynamic-bg); 
+            padding: 0.6rem 2rem; 
+            border-radius: 9999px; 
+            transition: all 0.3s; 
+            font-weight: normal;
+        }
+        .btn-dynamic:hover { background-color: var(--dynamic-olive); color: var(--color-beige); }
+        
+        .btn-olive { 
+            background-color: var(--dynamic-olive); 
+            color: var(--color-beige); 
+            padding: 0.6rem 2rem; 
+            border-radius: 9999px; 
+            transition: all 0.3s; 
+        }
+        .btn-olive:hover { background-color: var(--dynamic-accent); color: var(--dynamic-bg); }
+
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 導覽列排版 */
+        .nav-container { 
+            display: grid; 
+            grid-template-columns: 1fr auto 1fr; 
+            width: 100%; 
+            height: 100%; 
+            align-items: center; 
+            padding: 0 2rem;
+        }
+        .nav-left { display: flex; align-items: center; gap: 1.5rem; white-space: nowrap; }
+        .nav-center { display: flex; justify-content: center; align-items: center; }
+        .nav-right { display: flex; justify-content: flex-end; align-items: center; }
+
+        .logo-img {
+            height: 64px; 
+            aspect-ratio: 3 / 1;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        /* 測驗動畫 */
+        @keyframes drop {
+          0% { transform: translate(-50%, -10px); opacity: 0; }
+          40% { opacity: 1; }
+          100% { transform: translate(-50%, 40px); opacity: 0; }
+        }
+        .drop-animation { animation: drop 1.2s ease-in infinite; }
+
+        /* 心靈測驗與商城卡片樣式 */
+        .quiz-card-premium {
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 3rem;
+            box-shadow: 0 30px 80px rgba(45, 89, 117, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.7s;
+            width: 100%;
+            max-width: 1024px; 
+            margin: auto;
+        }
+        .quiz-option-premium {
+            text-align: left;
+            padding: 1.5rem 2.5rem;
+            border-radius: 1.5rem;
+            border: 1px solid rgba(45, 89, 117, 0.1);
+            background-color: rgba(252, 251, 249, 0.9);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            width: 100%;
+        }
+        .quiz-option-premium:hover { border-color: var(--color-olive); background-color: white; transform: translateX(10px); }
+        .option-label {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background-color: #F2EFE9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--color-blue);
+            flex-shrink: 0;
+        }
+        .quiz-option-premium:hover .option-label { background-color: var(--color-olive); color: white; }
+        
+        .shop-card { transition: all 0.4s ease; border: 1px solid rgba(239, 213, 220, 0.1); }
+        .shop-card:hover { transform: translateY(-10px); border-color: var(--dynamic-accent); }
+    </style>
+</head>
+<body class="page-theme-blue">
+
+    <!-- 浮動欄 -->
+    <div class="floating-bar">
+        <a href="#" class="social-btn" title="Instagram"><i data-lucide="instagram" size="18"></i></a>
+        <a href="#" class="social-btn" title="Facebook"><i data-lucide="facebook" size="18"></i></a>
+        <a href="#" class="social-btn" title="官方line"><i data-lucide="message-circle" size="18"></i></a>
+        <a href="#" class="social-btn" title="YouTube"><i data-lucide="youtube" size="18"></i></a>
+    </div>
+
+    <!-- 上方導覽列 -->
+    <header class="shadow-sm">
+        <div class="nav-container">
+            <div class="hidden lg:flex nav-left text-[11px] xl:text-[12px] font-normal tracking-tight">
+                <a class="cursor-pointer transition-colors hover:text-[#708238]" style="color: var(--dynamic-text);" onclick="showPage('member')">會員制</a>
+                <div class="relative group h-full flex items-center">
+                    <button class="flex items-center gap-1 transition-colors hover:text-[#708238]" style="color: var(--dynamic-text);">體驗課程 & 材料包 <i data-lucide="chevron-down" size="12"></i></button>
+                    <div class="nav-dropdown">
+                        <a onclick="showPage('course-exp')" class="dropdown-item cursor-pointer">調香體驗課程清單</a>
+                        <a onclick="showPage('shop')" class="dropdown-item cursor-pointer">材料包購買清單</a>
+                    </div>
+                </div>
+                <a class="cursor-pointer transition-colors hover:text-[#708238]" style="color: var(--dynamic-text);" onclick="showPage('course-train')">調香培訓課程</a>
+                <a class="cursor-pointer transition-colors hover:text-[#708238]" style="color: var(--dynamic-text);" onclick="showPage('course-skin')">芳療護膚品課程</a>
+                <div class="relative group h-full flex items-center">
+                    <button class="flex items-center gap-1 transition-colors hover:text-[#708238]" style="color: var(--dynamic-text);">關於我們 <i data-lucide="chevron-down" size="12"></i></button>
+                    <div class="nav-dropdown">
+                        <a onclick="showPage('about-instructor')" class="dropdown-item cursor-pointer">講師介紹 (證照、經歷)</a>
+                        <a onclick="showPage('about-faq')" class="dropdown-item cursor-pointer">常見問題 QA</a>
+                        <a onclick="showPage('about-source')" class="dropdown-item cursor-pointer">香水來源理念</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-center" onclick="showPage('home')">
+                <img id="main-logo" src="JBEAU01.PNG" alt="JBEAU Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/192x64/2D5975/f7eada?text=JBEAU'">
+            </div>
+
+            <div class="hidden lg:flex nav-right">
+                <button onclick="showPage('consult')" class="btn-dynamic text-[11px] tracking-widest px-6 py-2">
+                    線上諮詢
+                </button>
+            </div>
+            
+            <button class="lg:hidden p-2 ml-auto" onclick="toggleMenu(true)" style="color: var(--dynamic-text);"><i data-lucide="menu"></i></button>
+        </div>
+    </header>
+
+    <div id="mobile-menu-overlay" class="fixed inset-0 bg-white z-[60] flex flex-col p-10 lg:hidden" style="display:none; background-color: var(--dynamic-bg);">
+        <button class="self-end p-2" onclick="toggleMenu(false)" style="color: var(--dynamic-text);"><i data-lucide="x"></i></button>
+        <div class="flex flex-col space-y-8 text-xl font-normal mt-10" style="color: var(--dynamic-text);">
+            <a onclick="showPage('home'); toggleMenu(false)">首頁</a>
+            <a onclick="showPage('member'); toggleMenu(false)">會員制</a>
+            <a onclick="showPage('course-exp'); toggleMenu(false)">體驗課程</a>
+            <a onclick="showPage('shop'); toggleMenu(false)">材料包購買</a>
+            <a onclick="showPage('consult'); toggleMenu(false)" style="color: var(--color-olive);">線上諮詢</a>
+        </div>
+    </div>
+
+    <!-- 主要內容區 -->
+    <main>
+
+        <!-- ================= 0. 首頁 (Home) ================= -->
+        <section id="page-home" class="page-section active">
+            <div class="hero-slider">
+                <img src="homeph01.JPG" class="slider-img active">
+                <img src="homeph02.JPG" class="slider-img">
+                <img src="homeph03.JPG" class="slider-img">
+                <div class="absolute inset-0 bg-black/5 z-10 pointer-events-none"></div>
+                <div class="absolute bottom-10 right-10 flex gap-4 z-20">
+                    <button onclick="prevSlide()" class="p-4 rounded-full shadow-lg transition-all" style="background-color: var(--color-beige); color: var(--color-blue);"><i data-lucide="chevron-left" size="24"></i></button>
+                    <button onclick="nextSlide()" class="p-4 rounded-full shadow-lg transition-all" style="background-color: var(--color-beige); color: var(--color-blue);"><i data-lucide="chevron-right" size="24"></i></button>
+                </div>
+            </div>
+
+            <div class="py-24" style="background-color: var(--color-beige);">
+                <div class="max-w-7xl mx-auto px-6 text-center text-[var(--color-blue)]">
+                    <h2 class="text-xs uppercase tracking-[0.4em] font-normal mb-6 opacity-60">Introduction</h2>
+                    <h3 class="text-3xl md:text-4xl font-normal serif italic mb-8">品牌簡介</h3>
+                    <p class="text-lg md:text-xl leading-relaxed max-w-3xl mx-auto opacity-90 mb-12">
+                        JBEAU 致力於將法式調香工藝與現代美學結合。<br>
+                        每一絲氣味都是靈魂的私語，引領您在數百種香料中，親手調配出專屬於您的印記。
+                    </p>
+                    <button onclick="showPage('about-source')" class="px-10 py-3 rounded-full text-xs font-normal uppercase tracking-widest transition-all border border-[var(--color-blue)] hover:bg-[var(--color-blue)] hover:text-[var(--color-beige)]">探索更多故事</button>
+                </div>
+            </div>
+
+            <div class="py-24" style="background-color: var(--color-blue);">
+                <div class="max-w-7xl mx-auto px-6">
+                    <h2 class="text-3xl font-normal mb-16 text-center border-b pb-4 border-[#f7eada] text-[#f7eada] uppercase tracking-widest">動態動向</h2>
+                    <div class="grid lg:grid-cols-2 gap-16">
+                        <div class="space-y-12">
+                            <h3 class="text-xs uppercase tracking-widest font-normal border-l-2 pl-4 text-[#f7eada]" style="border-color: #f7eada;">互動平台 & 最新消息</h3>
+                            <div class="p-10 rounded-[2rem] border group cursor-pointer transition-all hover:bg-black/10" style="border-color: #f7eada;" onclick="showPage('quiz')">
+                                <h4 class="text-xl font-normal mb-3 flex items-center gap-3 text-[#f7eada]">心靈香氣測驗 🔮</h4>
+                                <p class="text-sm mb-6 opacity-70 text-[#f7eada]">靈魂調香室：進入測驗，調配你的專屬「聖羅勒」靈魂香氣。</p>
+                                <span class="text-sm underline text-[#f7eada]">立即開始調配 →</span>
+                            </div>
+                            <div class="p-10 rounded-[2rem] shadow-lg text-[#2D5975]" style="background-color: #f7eada;">
+                                <h4 class="text-lg font-normal mb-6">最新公告</h4>
+                                <ul class="space-y-5 text-sm opacity-90">
+                                    <li>● 【集點制】會員首購享點數加倍禮遇</li>
+                                    <li>● 【新課程】法式寵物友善香氛系列工作坊</li>
+                                    <li>● 【活動】格拉斯之夜：氣味感官交流會</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="space-y-12">
+                            <h3 class="text-xs uppercase tracking-widest font-normal border-l-2 pl-4 text-[#f7eada]" style="border-color: #f7eada;">知識文章</h3>
+                            <div class="space-y-8">
+                                <div class="group cursor-pointer">
+                                    <h4 class="text-xl font-normal mt-2 transition-all text-[#f7eada]">為什麼要自製香水？</h4>
+                                    <p class="text-sm mt-3 leading-relaxed opacity-80 text-[#f7eada]">在市售香水中找不到的味道，為自己打造獨特名片...</p>
+                                    <button class="mt-4 text-xs underline text-[#f7eada]">閱讀全文</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 1. 會員制 (Member) ================= -->
+        <section id="page-member" class="page-section py-24 px-6 items-center">
+            <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+                <div class="rounded-[2.5rem] overflow-hidden shadow-xl border-4" style="border-color: var(--dynamic-olive);">
+                    <img src="https://images.unsplash.com/photo-1583467875263-d50dec37a88c?auto=format&fit=crop&q=80&w=800" class="w-full aspect-[4/5] object-cover" alt="Membership">
+                </div>
+                <div class="fade-in">
+                    <h2 class="tracking-[0.3em] uppercase text-xs mb-4" style="color: var(--dynamic-olive);">Membership Plan</h2>
+                    <h3 class="text-4xl mb-10 text-[var(--dynamic-text)]">專屬會員制計畫</h3>
+                    <div class="space-y-8 text-sm leading-relaxed">
+                        <p class="text-lg opacity-90 text-[var(--dynamic-text)]">加入 JBEAU 俱樂部，開啟一場關於氣味與靈魂的長期對話。</p>
+                        <div class="p-8 rounded-[2rem] border" style="border-color: var(--dynamic-accent);">
+                            <h4 class="mb-6 text-lg text-[var(--dynamic-text)]">● 會員權益與集點制度</h4>
+                            <p class="mb-4 opacity-70 text-[var(--dynamic-text)]">1. 每筆消費滿 NT$100 即可獲得 1 點氣息點數。</p>
+                            <p class="mb-4 opacity-70 text-[var(--dynamic-text)]">2. 點數可用於兌換限定版原精套組或折抵培訓課程。</p>
+                        </div>
+                        <button class="w-full btn-dynamic py-4 text-sm mt-6 uppercase tracking-widest font-bold">註冊 / 登入會員</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 2. 靈魂調香室 (Quiz) ================= -->
+        <section id="page-quiz" class="page-section py-24 px-6 justify-center items-center">
+            <div id="quiz-container" class="quiz-card-premium p-12 md:p-24 text-center flex flex-col justify-center">
+                <!-- 初始畫面 -->
+                <div class="space-y-12 animate-in fade-in zoom-in duration-1000">
+                    <div class="mx-auto w-24 h-24 flex items-center justify-center bg-[#F6F1F1] rounded-full border border-[#DED0B6]">
+                        <i data-lucide="droplets" class="w-12 h-12 text-[#A9907E]"></i>
+                    </div>
+                    <div class="space-y-6">
+                        <h1 class="text-5xl font-medium tracking-tight text-[var(--dynamic-text)]">靈魂調香室</h1>
+                        <p class="text-xl text-[var(--dynamic-text)] opacity-80 leading-relaxed max-w-2xl mx-auto">
+                            暫且放下喧囂，與你的內在對話。<br>
+                            我們將依據你當下的能量，為你調製專屬於你的「聖羅勒」靈魂香氣。
+                        </p>
+                    </div>
+                    <button onclick="startQuiz()" class="w-full max-w-md mx-auto btn-dynamic py-5 shadow-xl transition-all flex items-center justify-center gap-3 text-lg font-bold">
+                        開始心靈調配 <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 3. 材料包商城 (Shop) ================= -->
+        <section id="page-shop" class="page-section py-24 px-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-20">
+                    <h2 class="text-5xl serif font-bold mb-6 text-[var(--dynamic-accent)]">靈魂香氣材料包</h2>
+                    <p class="opacity-70 text-sm tracking-[0.3em] uppercase">Select Your Inner Essence</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-12" id="shop-grid">
+                    <!-- JS 生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 4. 線上諮詢 (Consult) ================= -->
+        <section id="page-consult" class="page-section py-24 px-6 items-center justify-center">
+            <div class="max-w-6xl w-full mx-auto text-center">
+                <h2 class="text-5xl serif font-bold mb-20 text-[var(--dynamic-text)]">線上諮詢</h2>
+                <div class="grid md:grid-cols-2 gap-20 text-left">
+                    <div class="space-y-12">
+                        <h3 class="text-2xl font-normal border-l-4 pl-6 uppercase tracking-[0.2em]" style="border-color: var(--dynamic-olive); color: var(--dynamic-text);">1. 社群平台即時諮詢</h3>
+                        <div class="grid grid-cols-2 gap-6">
+                            <a href="#" class="flex flex-col items-center justify-center p-12 bg-white/5 border shadow-sm transition-all hover:bg-white/10 rounded-[3rem] group" style="border-color: var(--dynamic-accent);">
+                                <i data-lucide="message-circle" class="mb-6 group-hover:text-[#708238] transition-colors" size="48" style="color: var(--dynamic-accent);"></i>
+                                <span class="text-lg font-medium" style="color: var(--dynamic-text);">官方 LINE</span>
+                            </a>
+                            <a href="#" class="flex flex-col items-center justify-center p-12 bg-white/5 border shadow-sm transition-all hover:bg-white/10 rounded-[3rem] group" style="border-color: var(--dynamic-accent);">
+                                <i data-lucide="instagram" class="mb-6 group-hover:text-[#708238] transition-colors" size="48" style="color: var(--dynamic-accent);"></i>
+                                <span class="text-lg font-medium" style="color: var(--dynamic-text);">Instagram</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="space-y-12">
+                        <h3 class="text-2xl font-normal border-l-4 pl-6 uppercase tracking-[0.2em]" style="border-color: var(--dynamic-olive); color: var(--dynamic-text);">2. 諮詢需求描述</h3>
+                        <div class="p-10 rounded-[3rem] shadow-xl border bg-white/5" style="border-color: var(--dynamic-accent);">
+                            <form class="space-y-6">
+                                <input type="email" placeholder="您的聯絡信箱" class="w-full p-5 rounded-2xl outline-none border focus:ring-1 transition-all" style="background-color: transparent; border-color: var(--dynamic-accent); color: var(--dynamic-text);">
+                                <textarea rows="5" placeholder="請描述您的問題或需求..." class="w-full p-5 rounded-2xl outline-none border focus:ring-1 transition-all" style="background-color: transparent; border-color: var(--dynamic-accent); color: var(--dynamic-text);"></textarea>
+                                <button type="button" class="w-full btn-dynamic py-5 text-lg font-bold flex items-center justify-center gap-3">
+                                    <i data-lucide="send" size="20"></i> 送出諮詢內容
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="py-20 px-8 transition-all duration-500" style="background-color: var(--dynamic-accent);">
+        <div class="w-full grid md:grid-cols-3 gap-16 border-b pb-16 mb-12" style="border-color: rgba(255, 255, 255, 0.1);">
+            <div style="color: var(--dynamic-bg);">
+                <h3 class="font-normal serif text-2xl mb-6 tracking-widest uppercase">JBEAU</h3>
+                <p class="text-[10px] tracking-widest uppercase opacity-60">Professional Perfumery Lab.<br>© 2024 JBEAU All Rights Reserved.</p>
+            </div>
+            <div class="space-y-4" style="color: var(--dynamic-bg);">
+                <p class="text-sm">電話：(02) 2345-6789</p>
+                <p class="text-sm">電郵：service@jbeau.com</p>
+            </div>
+            <div class="flex flex-col items-end" style="color: var(--dynamic-bg);">
+                <div class="flex gap-6 mb-10">
+                    <i data-lucide="instagram" size="16" class="hover:text-[#708238] cursor-pointer"></i>
+                    <i data-lucide="facebook" size="16" class="hover:text-[#708238] cursor-pointer"></i>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // 頁面切換核心邏輯
+        function showPage(pageId) {
+            const sections = document.querySelectorAll('.page-section');
+            sections.forEach(sec => sec.classList.remove('active'));
+            
+            const target = document.getElementById('page-' + pageId);
+            const logo = document.getElementById('main-logo');
+            
+            if (target) {
+                target.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // 重置主題類別
+                document.body.classList.remove('page-theme-pink', 'page-theme-quiz');
+
+                if (pageId === 'home') {
+                    if (logo) logo.src = "JBEAU01.PNG"; 
+                } else if (pageId === 'quiz') {
+                    document.body.classList.add('page-theme-quiz'); 
+                    if (logo) logo.src = "JBEAU01.PNG"; 
+                } else {
+                    document.body.classList.add('page-theme-pink'); 
+                    if (logo) logo.src = "JBEAU02.PNG"; 
+                    if (pageId === 'shop') renderShop();
+                }
+            }
+        }
+
+        function toggleMenu(isOpen) {
+            const menu = document.getElementById('mobile-menu-overlay');
+            menu.style.display = isOpen ? 'flex' : 'none';
+        }
+
+        // 輪播邏輯
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slider-img');
+        function showSlide(index) {
+            slides.forEach(s => s.classList.remove('active'));
+            slides[index].classList.add('active');
+        }
+        function nextSlide() { currentSlide = (currentSlide + 1) % slides.length; showSlide(currentSlide); }
+        function prevSlide() { currentSlide = (currentSlide - 1 + slides.length) % slides.length; showSlide(currentSlide); }
+        setInterval(nextSlide, 5000);
+
+        // ================= 靈魂調香室核心邏輯 =================
+        let currentStep = 0;
+        let quizAnswers = []; 
+        const QUESTIONS = [
+          { id: 1, text: "你站在人生十字路口時，你比較像？", options: [{ l: 'A', t: '看見前方充滿希望' }, { l: 'B', t: '渴望向世界證明自己' }, { l: 'C', t: '希望身邊有人陪伴' }, { l: 'D', t: '先讓自己腳步穩住' }] },
+          { id: 2, text: "最近壓力來襲時，你會？", options: [{ l: 'A', t: '主動尋找樂趣轉換心情' }, { l: 'B', t: '更加倍努力去克服它' }, { l: 'C', t: '尋找親近的人傾訴' }, { l: 'D', t: '安靜地獨自消化情緒' }] },
+          { id: 3, text: "如果你是一種光，你覺得自己是？", options: [{ l: 'A', t: '溫暖大地的大片陽光' }, { l: 'B', t: '燃燒黑夜的熊熊火光' }, { l: 'C', t: '柔和寧靜的皎潔月光' }, { l: 'D', t: '指引方向的細微星光' }] },
+          { id: 4, text: "你對未來的感覺比較像是？", options: [{ l: 'A', t: '充滿未知的期待' }, { l: 'B', t: '展現抱負的野心' }, { l: 'C', t: '輕盈溫柔的感受' }, { l: 'D', t: '踏實穩定的建築' }] },
+          { id: 5, text: "朋友眼中的你更偏向？", options: [{ l: 'A', t: '永遠樂觀的開心果' }, { l: 'B', t: '充滿拼勁的開拓者' }, { l: 'C', t: '心思細膩的守護者' }, { l: 'D', t: '絕對靠得住的肩膀' }] },
+          { id: 6, text: "最近的你，最渴望得到的是？", options: [{ l: 'A', t: '純粹的快樂與放鬆' }, { l: 'B', t: '突破現狀的勇氣' }, { l: 'C', t: '被深度理解的感覺' }, { l: 'D', t: '生活秩序的安定感' }] },
+          { id: 7, text: "當原訂計畫被打亂，你的反應？", options: [{ l: 'A', t: '轉念思考新方法' }, { l: 'B', t: '感到不甘心並想重來' }, { l: 'C', t: '情緒有些低落難過' }, { l: 'D', t: '迅速調整步調適應' }] },
+          { id: 8, text: "在一段經歷中，你更在意的是？", options: [{ l: 'A', t: '當下的氛圍感' }, { l: 'B', t: '最終獲得的成果' }, { l: 'C', t: '與人的關係連結' }, { l: 'D', t: '整體的節奏掌控' }] },
+          { id: 9, text: "你內心深處更相信哪種力量？", options: [{ l: 'A', t: '樂觀會帶來無限機會' }, { l: 'B', t: '汗水與努力必有結果' }, { l: 'C', t: '愛能帶來本質的改變' }, { l: 'D', t: '穩定能積累最強力量' }] },
+          { id: 10, text: "你理想中的生活畫面是？", options: [{ l: 'A', t: '充滿笑聲與各種驚喜' }, { l: 'B', t: '目標達成後的成就感' }, { l: 'C', t: '擁有一個溫馨的歸宿' }, { l: 'D', t: '規律且踏實的每一天' }] },
+          { id: 11, text: "如果現在能許一個願望？", options: [{ l: 'A', t: '獲得更純粹的快樂' }, { l: 'B', t: '成為更強大的自己' }, { l: 'C', t: '擁有更幸福的關係' }, { l: 'D', t: '得到內心真正的安心' }] },
+          { id: 12, text: "你覺得現在的靈魂狀態正處於？", options: [{ l: 'A', t: '努力散發光芒' }, { l: 'B', t: '在熱情中燃燒' }, { l: 'C', t: '在安靜中成長' }, { l: 'D', t: '向深處紮根' }] },
+        ];
+
+        const SCENT_RESULTS = {
+          SUNSHINE_ACTIVE: { id: "SUNSHINE_ACTIVE", title: "積極陽光", icon: "wind", desc: "你的靈魂帶著不可救藥的積極。這份香氣能將活力轉化為穩定的正面頻率。", hex: "#E6D5B8", keywords: ["活力", "明亮", "無畏"], price: "NT$ 1,280" },
+          SPRINT_ACTION: { id: "SPRINT_ACTION", title: "勇往直前", icon: "zap", desc: "挑戰是靈魂的燃料。這款配方萃取勇氣精華，支持你那不曾停歇的衝勁。", hex: "#B5C0D0", keywords: ["冒險", "果斷", "動能"], price: "NT$ 1,280" },
+          EMOTIONAL_HOPE: { id: "EMOTIONAL_HOPE", title: "懷抱希望", icon: "heart", desc: "溫柔是你的武器。這款晨露般的香氣，撫慰細膩心靈，築起愛與希望的園地。", hex: "#DBC4B9", keywords: ["細膩", "包容", "守護"], price: "NT$ 1,280" },
+          SUNSHINE_DREAM: { id: "SUNSHINE_DREAM", title: "幸福甜夢", icon: "moon", desc: "幸福是隨處可見的小確幸。這款帶著夢幻氣息的配方，帶給你安穩如詩的時光。", hex: "#C9BBCF", keywords: ["和諧", "喜悅", "寧靜"], price: "NT$ 1,280" },
+          SPRINT_SUCCESS: { id: "SPRINT_SUCCESS", title: "夢想成真", icon: "target", desc: "野心是為了遇見更好的自己。這款配方凝聚實力與專注感，伴隨你將藍圖實體化。", hex: "#CCD3CA", keywords: ["卓越", "意志", "成就"], price: "NT$ 1,280" },
+          STABLE_PERSIST: { id: "STABLE_PERSIST", title: "持之以恆", icon: "star", desc: "你相信時間的力量。這款紮根大地、充滿厚實感的香氣，淬煉出非凡價值。", hex: "#E2D4C3", keywords: ["踏實", "堅定", "積累"], price: "NT$ 1,280" }
+        };
+
+        function startQuiz() { currentStep = 0; quizAnswers = []; renderQuizQuestion(); }
+
+        function renderQuizQuestion() {
+          const container = document.getElementById('quiz-container');
+          if (currentStep >= QUESTIONS.length) { startMixingStage(); return; }
+          const q = QUESTIONS[currentStep];
+          container.innerHTML = `
+            <div class="space-y-12 animate-in fade-in duration-500 max-w-5xl mx-auto">
+                <div class="flex flex-col space-y-4">
+                  <div class="flex justify-between items-center text-sm font-bold tracking-[0.2em] text-[#A9907E] uppercase">
+                    <span>Aroma Module ${q.id}</span>
+                    <span>${q.id} / 12</span>
+                  </div>
+                  <div class="w-full h-1 bg-gray-200/50 rounded-full overflow-hidden">
+                    <div class="h-full bg-[var(--dynamic-accent)] transition-all duration-500" style="width: ${(q.id / QUESTIONS.length) * 100}%"></div>
+                  </div>
+                </div>
+                <h3 class="text-3xl md:text-5xl font-medium text-[var(--dynamic-text)] leading-snug">${q.text}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10">
+                  ${q.options.map(opt => `
+                    <button onclick="handleQuizAnswer('${opt.l}')" class="quiz-option-premium group">
+                      <span class="option-label">${opt.l}</span>
+                      <span class="text-gray-600 group-hover:text-[var(--dynamic-text)] transition-colors text-xl font-medium">${opt.t}</span>
+                    </button>
+                  `).join('')}
+                </div>
+            </div>
+          `;
+          lucide.createIcons();
+        }
+
+        function handleQuizAnswer(val) { quizAnswers.push(val); currentStep++; renderQuizQuestion(); }
+
+        function startMixingStage() {
+          const container = document.getElementById('quiz-container');
+          const stages = ["純淨提取中", "基調融合中", "香氣醞釀中", "靈魂穩定中", "最終熟成中"];
+          let i = 0;
+          const interval = setInterval(() => {
+            if (i < stages.length) {
+              container.innerHTML = `
+                <div class="text-center space-y-12 py-20 fade-in text-[var(--dynamic-text)]">
+                    <div class="relative w-32 h-32 mx-auto">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="relative w-full h-full"><div class="absolute left-1/2 top-0 w-4 h-5 bg-[#B7C4CF] rounded-full blur-[0.5px] drop-animation"></div></div>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 h-16 border-x-2 border-b-2 border-gray-300 rounded-b-3xl overflow-hidden">
+                            <div class="absolute bottom-0 w-full bg-[var(--dynamic-accent)] transition-all duration-1000 ease-out opacity-40" style="height: ${(i + 1) * 20}%"></div>
+                        </div>
+                        <i data-lucide="beaker" class="absolute bottom-4 left-1/2 -translate-x-1/2 w-10 h-10 opacity-30"></i>
+                    </div>
+                    <div class="space-y-6"><h3 class="text-2xl font-medium tracking-[0.3em] animate-pulse">${stages[i]}</h3></div>
+                </div>
+              `;
+              lucide.createIcons(); i++;
+            } else { clearInterval(interval); showQuizResult(); }
+          }, 900);
+        }
+
+        function showQuizResult() {
+          const mainType = Object.keys({A:0,B:0,C:0,D:0}).reduce((a, b) => quizAnswers.slice(0,8).filter(v=>v===a).length > quizAnswers.slice(0,8).filter(v=>v===b).length ? a : b);
+          const subCounts = quizAnswers.slice(8,12).reduce((acc, v) => { acc[v]++; return acc; }, {A:0,B:0,C:0,D:0});
+          let resultKey = (mainType === 'A' ? (subCounts.A >= subCounts.C ? "SUNSHINE_ACTIVE" : "SUNSHINE_DREAM") : (mainType === 'B' ? (subCounts.B >= subCounts.A ? "SPRINT_SUCCESS" : "SPRINT_ACTION") : (mainType === 'C' ? "EMOTIONAL_HOPE" : "STABLE_PERSIST")));
+
+          const res = SCENT_RESULTS[resultKey];
+          const container = document.getElementById('quiz-container');
+          container.innerHTML = `
+            <div class="text-center space-y-12 fade-in max-w-5xl mx-auto py-10">
+                <div class="relative inline-block scale-150 mb-10">
+                  <div class="w-28 h-40 rounded-3xl shadow-2xl mx-auto flex flex-col items-center justify-center text-white p-4 relative" style="background-color: ${res.hex}">
+                    <i data-lucide="${res.icon}" class="w-12 h-12"></i>
+                  </div>
+                </div>
+                <div class="space-y-6">
+                  <h2 class="text-5xl md:text-7xl font-bold text-[var(--dynamic-text)] tracking-tight">${res.title}</h2>
+                  <div class="flex justify-center gap-4 pt-4">${res.keywords.map(k => `<span class="text-lg px-6 py-2 rounded-full bg-white/50 text-[var(--dynamic-text)] border border-gray-200">#${k}</span>`).join('')}</div>
+                </div>
+                <div class="bg-white/40 p-10 rounded-[3rem] text-center border border-white/60 max-w-3xl mx-auto text-[var(--dynamic-text)]"><p class="text-2xl font-light">${res.desc}</p></div>
+                <div class="pt-10 flex flex-col items-center gap-6">
+                  <button onclick="showPage('shop')" class="w-full max-w-md py-6 rounded-full shadow-2xl text-white font-bold text-2xl" style="background-color: ${res.hex}">立即購入材料包</button>
+                  <button onclick="startQuiz()" class="text-[var(--dynamic-text)] opacity-50 text-lg hover:underline">重新測驗</button>
+                </div>
+            </div>
+          `;
+          lucide.createIcons();
+        }
+
+        function renderShop() {
+            const grid = document.getElementById('shop-grid');
+            if(!grid) return;
+            grid.innerHTML = Object.values(SCENT_RESULTS).map(item => `
+                <div class="shop-card rounded-[3rem] p-12 flex flex-col items-center text-center backdrop-blur-md" style="background-color: rgba(255, 255, 255, 0.05);">
+                    <div class="w-28 h-36 rounded-[2rem] mb-10 flex items-center justify-center text-white relative shadow-2xl" style="background-color: ${item.hex}">
+                        <i data-lucide="${item.icon}" size="40"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold mb-4 text-[var(--dynamic-accent)]">${item.title}</h3>
+                    <p class="text-lg opacity-60 mb-10 leading-relaxed px-2 text-[var(--dynamic-text)]">${item.desc}</p>
+                    <div class="mt-auto w-full">
+                        <p class="text-3xl font-bold mb-8" style="color: var(--dynamic-accent)">${item.price}</p>
+                        <button class="w-full btn-dynamic py-5 text-lg font-bold uppercase">立即購入</button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
